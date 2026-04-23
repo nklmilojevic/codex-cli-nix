@@ -5,7 +5,7 @@
 }:
 
 let
-  version = "0.123.0";
+  version = "0.124.0";
 
   targetTriple = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -18,19 +18,19 @@ let
   platformSources = {
     "aarch64-darwin" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-darwin-arm64.tgz";
-      sha256 = "11l706kpxlqwg7qryyh4pfnqqqgk6sbfa29q5f55bs7303gidr89";
+      sha256 = "0nivpc52sdx27hm42i79nc2l1amg03ynqxcsy5zh14hmbwxna8c2";
     };
     "x86_64-darwin" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-darwin-x64.tgz";
-      sha256 = "177xxkfp0vvr2xlgk6bqm6hkx6qkib1mqvlg4w2ihq3fc7q1zh5f";
+      sha256 = "1nikj6gv8qmfk45rsdmkgq46fmjkr75z00yi5icmian9dzs0r77b";
     };
     "x86_64-linux" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-linux-x64.tgz";
-      sha256 = "1wxzx9ginr8xkcf64bj1gfnscwwi0wny259s8jqyfqd0i60r657l";
+      sha256 = "1p2g4imkpk6abz0lphal2xrlzha54ais2vbx54vpfq0fv5x67qmf";
     };
     "aarch64-linux" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-linux-arm64.tgz";
-      sha256 = "0817nla0hhc7h2ax9nw9v30j8421pjrmxcl61376nvm3yjk5vh6a";
+      sha256 = "1gk5bnx2ypqvrz0mq9linbs2y718zn1g30lrsf2x1vsdnnlf8my0";
     };
   };
 
