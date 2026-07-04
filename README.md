@@ -141,28 +141,18 @@ Add to your Home Manager configuration:
 
 Our custom `package.nix` implementation:
 
-1. **Pre-fetches npm tarball**: Uses Nix's Fixed Output Derivation (FOD) for reproducible, offline builds
-2. **Bundles Node.js 22 LTS**: Ensures consistent runtime environment across all systems
-3. **Custom wrapper script**: Handles PATH, environment variables, and Codex-specific requirements
+1. **Pre-fetches the native Rust binary**: Downloads the official binary from GitHub releases using Nix's Fixed Output Derivation (FOD) for reproducible, offline builds
+2. **No Node.js required**: Uses the native Rust binary instead of the npm package
+3. **Custom wrapper script**: Adds runtime dependencies (`ripgrep`, and `bubblewrap` on Linux) to PATH and disables the auto-updater
 4. **Multi-platform builds**: CI builds and caches for both Linux and macOS
 5. **Sandbox compatible**: All network fetching happens during the FOD phase, not build phase
 
-### Runtime Environment
-
-Currently using **Node.js 22 LTS** because:
-- Long-term stability and support until April 2027
-- Better performance than older Node.js versions
-- Latest LTS with all security updates
-- Consistent behavior across all platforms
-
 ### Features
 
-- **Bundled Node.js Runtime**: Ships with Node.js v22 LTS for maximum compatibility
-- **No Global Dependencies**: Works independently of system Node.js installations
+- **Native Rust Binary**: Fast startup, no Node.js runtime dependency
 - **Version Pinning**: Ensures consistent behavior across different environments
-- **Offline Installation**: Pre-fetches npm packages for reliable builds
-- **Auto-update Protection**: Prevents unexpected updates that might break your workflow
-- **Cross-platform Support**: Pre-built binaries for Linux and macOS
+- **Auto-update Protection**: `DISABLE_AUTOUPDATER=1` prevents unexpected updates that might break your workflow
+- **Cross-platform Support**: Pre-built binaries for Linux (musl, static) and macOS
 
 ## Development
 
@@ -188,7 +178,7 @@ nix develop
 This repository uses GitHub Actions to automatically check for new Codex versions hourly. When a new version is detected:
 
 1. A pull request is automatically created with the version update
-2. The tarball hash is automatically calculated
+2. The binary hashes are automatically calculated
 3. Tests run on both Linux and macOS to verify the build
 4. The PR auto-merges if all checks pass
 
