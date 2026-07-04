@@ -5,10 +5,10 @@ set -euo pipefail
 PACKAGE_FILE="package.nix"
 
 PLATFORMS=(
-  "darwin-arm64"
-  "darwin-x64"
-  "linux-x64"
-  "linux-arm64"
+  "aarch64-apple-darwin"
+  "x86_64-apple-darwin"
+  "x86_64-unknown-linux-musl"
+  "aarch64-unknown-linux-musl"
 )
 
 usage() {
@@ -58,11 +58,11 @@ VERSION="$1"
 
 echo "Updating to Codex CLI version $VERSION..."
 
-# Fetch platform-specific package hashes
+# Fetch platform-specific binary hashes from GitHub releases
 declare -A PLATFORM_HASHES
 for platform in "${PLATFORMS[@]}"; do
     echo "Fetching hash for $platform..."
-    URL="https://registry.npmjs.org/@openai/codex/-/codex-${VERSION}-${platform}.tgz"
+    URL="https://github.com/openai/codex/releases/download/rust-v${VERSION}/codex-${platform}.tar.gz"
     HASH=$(nix-prefetch-url "$URL" 2>/dev/null || echo "")
 
     if [ -z "$HASH" ]; then
@@ -82,11 +82,7 @@ sed -i.bak "s/version = \".*\"/version = \"$VERSION\"/" "$PACKAGE_FILE"
 # Update platform-specific hashes
 for platform in "${PLATFORMS[@]}"; do
     HASH="${PLATFORM_HASHES[$platform]}"
-    awk -v platform="$platform" -v hash="$HASH" '
-        $0 ~ "codex-\\$\\{version\\}-" platform "\\.tgz" { found=1 }
-        found && /sha256 = / { sub(/sha256 = ".*"/, "sha256 = \"" hash "\""); found=0 }
-        { print }
-    ' "$PACKAGE_FILE" > "${PACKAGE_FILE}.tmp" && mv "${PACKAGE_FILE}.tmp" "$PACKAGE_FILE"
+    sed -i.bak "s|\"$platform\" = \"[^\"]*\"|\"$platform\" = \"$HASH\"|" "$PACKAGE_FILE"
 done
 
 rm -f "${PACKAGE_FILE}.bak"
