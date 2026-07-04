@@ -49,8 +49,8 @@ jobs:
           # Verify the binary exists
           test -f ./result/bin/codex
 
-          # Verify the native binary is installed
-          test -d ./result/libexec/codex/codex
+          # Verify the native binary is installed (layout changed in 0.142.x)
+          test -x ./result/libexec/codex/bin/codex || test -x ./result/libexec/codex/codex/codex
 
       - name: Run basic functionality test
         run: |

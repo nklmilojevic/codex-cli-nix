@@ -5,7 +5,7 @@
 }:
 
 let
-  version = "0.132.0";
+  version = "0.142.5";
 
   targetTriple = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -18,19 +18,19 @@ let
   platformSources = {
     "aarch64-darwin" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-darwin-arm64.tgz";
-      sha256 = "0xn784ix44i36r3pz91g74yv1ccmq97qcrw6d66s6jp7ddgcx63n";
+      sha256 = "0v3p26gy9fh5l5n37cygxdp3lc8sr350i8d7pkl8d84kgd8xpy2i";
     };
     "x86_64-darwin" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-darwin-x64.tgz";
-      sha256 = "01nrfp2hfrqps787ff5j1sa52wagpy1zxy7zn7ljmjlhizw1wir1";
+      sha256 = "1yfl2m81sn6503fsj66s6hmr40h5brr9l40hha440caz7vnhkvzk";
     };
     "x86_64-linux" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-linux-x64.tgz";
-      sha256 = "1d7w2avigwgji88ggafwbgip8rkx282r758xh6njz1zavv1mdrkx";
+      sha256 = "0iyyga8glgqnnqwijqw9skwxm8dk310csf9y0fxsw289rcb32gm0";
     };
     "aarch64-linux" = fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-linux-arm64.tgz";
-      sha256 = "0b5lxlamc7557lalp0mia1c7rlcr36r8sbhnr57lfrmv0kk5m6as";
+      sha256 = "0ihdkdqmwji7ddz6d0wjz2ic1w2hpwvlr3sjx9zli6z8js4vmk3y";
     };
   };
 
@@ -55,9 +55,18 @@ stdenv.mkDerivation {
     # Copy the native binary and bundled tools
     cp -r package/vendor/${targetTriple}/* $out/libexec/codex/
 
+    # Tarball layout changed in 0.142.x: codex/codex -> bin/codex, path -> codex-path
+    if [ -x $out/libexec/codex/bin/codex ]; then
+      codexBin=$out/libexec/codex/bin/codex
+      toolsPath=$out/libexec/codex/codex-path
+    else
+      codexBin=$out/libexec/codex/codex/codex
+      toolsPath=$out/libexec/codex/path
+    fi
+
     # Create wrapper that adds bundled tools (e.g. rg) to PATH
-    makeWrapper $out/libexec/codex/codex/codex $out/bin/codex \
-      --prefix PATH : "$out/libexec/codex/path"
+    makeWrapper $codexBin $out/bin/codex \
+      --prefix PATH : "$toolsPath"
   '';
 
   meta = with lib; {
