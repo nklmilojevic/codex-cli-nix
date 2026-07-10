@@ -7,7 +7,7 @@
 }:
 
 let
-  version = "0.144.0";
+  version = "0.144.1";
 
   targetTriple = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -18,10 +18,10 @@ let
     or (throw "Unsupported platform: ${stdenv.hostPlatform.system}");
 
   hashes = {
-    "aarch64-apple-darwin" = "114jnik61p2x10ilgplr70bq4q2wslwa2v4pg18l4qi41cr65q0h";
-    "x86_64-apple-darwin" = "0c935n87iqm5p0fihwiq240pn3v48jlhrabkggfmyxbsrz0li5xx";
-    "x86_64-unknown-linux-musl" = "1fy80pxm1fancrd33xzr71i22b6iyvns1ai9503z6jmb43y86n3j";
-    "aarch64-unknown-linux-musl" = "0lbbrkn857nk5zlzy3lp271yfbpcqdx5zfzm8g3mbddxa1wlmi67";
+    "aarch64-apple-darwin" = "1f6vpzcpv5x194bbx55s3jny63627lrsqbg631ymz09hpp42mrw8";
+    "x86_64-apple-darwin" = "03hc5fpl7wjsp544mpsb5yjc0882gc2ms3gysm146l4lqwhjv9qf";
+    "x86_64-unknown-linux-musl" = "0a2s9yyyphkq3iwgn2bnkkgzhzvxsldpvf8d2bacgz351ki1l2c4";
+    "aarch64-unknown-linux-musl" = "1f5mm1flbsjv62iqix3z8nd2kvp34d16lxfkpd6ysv74k1gyzy5r";
   };
 
   # rg is used by codex for searching; bwrap for Linux sandboxing. Both were
