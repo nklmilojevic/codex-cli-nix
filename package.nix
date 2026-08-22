@@ -26,7 +26,7 @@ let
 
   # rg is used by codex for searching; bwrap for Linux sandboxing. Both were
   # previously bundled in the npm tarball, now supplied from nixpkgs.
-  runtimePath = lib.makeBinPath ([ ripgrep ] ++ lib.optionals stdenv.isLinux [ bubblewrap ]);
+  runtimePath = lib.makeBinPath ([ ripgrep ] ++ lib.optionals stdenv.hostPlatform.isLinux [ bubblewrap ]);
 in
 
 stdenv.mkDerivation {
