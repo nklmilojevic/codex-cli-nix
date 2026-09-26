@@ -7,7 +7,7 @@
 }:
 
 let
-  version = "0.157.0";
+  version = "0.157.1";
 
   targetTriple = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -18,10 +18,10 @@ let
     or (throw "Unsupported platform: ${stdenv.hostPlatform.system}");
 
   hashes = {
-    "aarch64-apple-darwin" = { codex = "02c98crdmzhshfmhad2f3lzp42qac0y8mypjifsvpj7q5cv2458g"; codeModeHost = "0mr3dnq6ahb6rd2n952ppi2jgkpiraag3fszi38380d5qzv3zcx5"; };
-    "x86_64-apple-darwin" = { codex = "0wybk18250nc7q3n72d73fpmcgp0zxi17c9ivwrqmwwdz20wry5v"; codeModeHost = "0m97q5hb493d01pgcqsn9mrxc13sqba355i7j5mybh4pxbcdx6wc"; };
-    "x86_64-unknown-linux-musl" = { codex = "0yv5q364hrzb0dq3vdhgjs939zl2fw8qm64anvghxi9mmany6gyv"; codeModeHost = "174qy5wi9iibbw7afggdzpiz03i5zc5qk8k4nvdwvjcmx0cj9ls7"; };
-    "aarch64-unknown-linux-musl" = { codex = "0pyjlw5zmjrjdy3y370l9an40cj4yw841hrvgqzq66wlirwy5yz6"; codeModeHost = "04690pnm2am50gg8f8yq9wm52z408i641c7w1q4zhsz16n0kac9v"; };
+    "aarch64-apple-darwin" = { codex = "1yllb2jrnz63c9bwsncvgadj2wrc26ld1c8ma0r52vx7nxib2i9w"; codeModeHost = "05432diwyzjklhnr8i8rmjqjzxwb9b3fmpzvr1hmrpvhr79350r8"; };
+    "x86_64-apple-darwin" = { codex = "084s3j8gf404iqdj789gyzr9b41nv8di0r9b3q6vfqjzdf09n6i8"; codeModeHost = "15hcbdh70m58krxk6lvd9ws2rsvrjkw4j5szax0bpzrqdgyair9z"; };
+    "x86_64-unknown-linux-musl" = { codex = "1wja8lqwmcz5mi55bqr7lq0kfywfqlpch5945px3g0cf0a71x379"; codeModeHost = "1z6pfblkkf6523mbkf8h7x5ikavyl69v54nvggp0dg76pfwgj5im"; };
+    "aarch64-unknown-linux-musl" = { codex = "0lv2n5fv3245r5lv5shz5drym5bvhs0p86wmn97hvzf5q4biqssc"; codeModeHost = "13iipfbmr24g885sshd3amvj5s192syrwc14mmvrm3m9dn044dz8"; };
   }.${targetTriple};
 
   # rg is used by codex for searching; bwrap for Linux sandboxing. Both were
