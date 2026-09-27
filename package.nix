@@ -2,8 +2,7 @@
 , stdenv
 , fetchurl
 , makeWrapper
-, ripgrep
-, bubblewrap
+, diffutils
 }:
 
 let
@@ -18,33 +17,25 @@ let
     or (throw "Unsupported platform: ${stdenv.hostPlatform.system}");
 
   hashes = {
-    "aarch64-apple-darwin" = { codex = "1yllb2jrnz63c9bwsncvgadj2wrc26ld1c8ma0r52vx7nxib2i9w"; codeModeHost = "05432diwyzjklhnr8i8rmjqjzxwb9b3fmpzvr1hmrpvhr79350r8"; };
-    "x86_64-apple-darwin" = { codex = "084s3j8gf404iqdj789gyzr9b41nv8di0r9b3q6vfqjzdf09n6i8"; codeModeHost = "15hcbdh70m58krxk6lvd9ws2rsvrjkw4j5szax0bpzrqdgyair9z"; };
-    "x86_64-unknown-linux-musl" = { codex = "1wja8lqwmcz5mi55bqr7lq0kfywfqlpch5945px3g0cf0a71x379"; codeModeHost = "1z6pfblkkf6523mbkf8h7x5ikavyl69v54nvggp0dg76pfwgj5im"; };
-    "aarch64-unknown-linux-musl" = { codex = "0lv2n5fv3245r5lv5shz5drym5bvhs0p86wmn97hvzf5q4biqssc"; codeModeHost = "13iipfbmr24g885sshd3amvj5s192syrwc14mmvrm3m9dn044dz8"; };
-  }.${targetTriple};
-
-  # rg is used by codex for searching; bwrap for Linux sandboxing. Both were
-  # previously bundled in the npm tarball, now supplied from nixpkgs.
-  runtimePath = lib.makeBinPath ([ ripgrep ] ++ lib.optionals stdenv.hostPlatform.isLinux [ bubblewrap ]);
+    "aarch64-apple-darwin" = "1asax88kdsv69cikr9y7x3fakbqi42i9ldk5x7fdkx62366m7nkc";
+    "x86_64-apple-darwin" = "0xxgss4syy4593nq8ds2liwp8dhfhw487c88wwilkxyiqxb5la6j";
+    "x86_64-unknown-linux-musl" = "0pzyj2jmj34qvy9s9y1x8ngnppxgbrdngb1mmm4wnwzxr5l1h88f";
+    "aarch64-unknown-linux-musl" = "0wdl8yx64libxkiafph7gaja3i7nxnqw2kjsd95r1r7lf06yg7s9";
+  };
 in
 
 stdenv.mkDerivation {
   pname = "codex";
   inherit version;
 
-  srcs = [
-    (fetchurl {
-      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${targetTriple}.tar.gz";
-      sha256 = hashes.codex;
-    })
-    # Spawned by codex as a sibling of the main binary when
-    # `features.code_mode_host` is enabled; code mode fails closed without it.
-    (fetchurl {
-      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-code-mode-host-${targetTriple}.tar.gz";
-      sha256 = hashes.codeModeHost;
-    })
-  ];
+  # The packaged release (codex-package.json manifest plus bin/, codex-path/
+  # and codex-resources/) is required since 0.157: codex auto-starts its
+  # background app-server daemon and refuses to without a complete package.
+  # It also bundles rg (codex-path/) and, on Linux, bwrap (codex-resources/).
+  src = fetchurl {
+    url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${targetTriple}.tar.gz";
+    sha256 = hashes.${targetTriple};
+  };
 
   sourceRoot = ".";
 
@@ -55,15 +46,25 @@ stdenv.mkDerivation {
   dontPatchELF = true;
   dontStrip = true;
 
+  # The background daemon runs from its own copy of the package under
+  # $CODEX_HOME and, unless pinned, self-updates from GitHub releases. Before
+  # each launch, pin it to this store package whenever it is unpinned or was
+  # installed from a different package (e.g. after a Nix upgrade).
   installPhase = ''
     mkdir -p $out/bin $out/libexec/codex
 
-    install -m755 codex-${targetTriple} $out/libexec/codex/codex
-    install -m755 codex-code-mode-host-${targetTriple} $out/libexec/codex/codex-code-mode-host
+    cp -R bin codex-package.json codex-path codex-resources $out/libexec/codex/
 
-    makeWrapper $out/libexec/codex/codex $out/bin/codex \
-      --set DISABLE_AUTOUPDATER 1 \
-      --prefix PATH : "${runtimePath}"
+    makeWrapper $out/libexec/codex/bin/codex $out/bin/codex \
+      --run '
+        daemon_pkg="''${CODEX_HOME:-$HOME/.codex}/packages/app-server-daemon"
+        if [ -d "$daemon_pkg/current" ] && {
+          [ -e "$daemon_pkg/auto-update-version" ] ||
+          ! ${diffutils}/bin/cmp -s "$daemon_pkg/current/codex-package.json" "'"$out"'/libexec/codex/codex-package.json"
+        }; then
+          "'"$out"'/libexec/codex/bin/codex" app-server daemon update --from-cli --yes >/dev/null 2>&1 || true
+        fi
+      '
   '';
 
   meta = with lib; {

@@ -58,35 +58,20 @@ VERSION="$1"
 
 echo "Updating to Codex CLI version $VERSION..."
 
-# Fetch platform-specific binary hashes from GitHub releases
-declare -A CODEX_HASHES
-declare -A CODE_MODE_HOST_HASHES
-
-prefetch() {
-    local url="$1"
-    nix-prefetch-url "$url" 2>/dev/null || echo ""
-}
-
+# Fetch platform-specific package hashes from GitHub releases
+declare -A PLATFORM_HASHES
 for platform in "${PLATFORMS[@]}"; do
-    echo "Fetching hashes for $platform..."
+    echo "Fetching hash for $platform..."
+    URL="https://github.com/openai/codex/releases/download/rust-v${VERSION}/codex-package-${platform}.tar.gz"
+    HASH=$(nix-prefetch-url "$URL" 2>/dev/null || echo "")
 
-    BASE_URL="https://github.com/openai/codex/releases/download/rust-v${VERSION}"
-
-    HASH=$(prefetch "${BASE_URL}/codex-${platform}.tar.gz")
     if [ -z "$HASH" ]; then
-        echo "Error: Could not fetch codex hash for platform $platform"
+        echo "Error: Could not fetch hash for platform $platform"
         exit 1
     fi
-    CODEX_HASHES[$platform]="$HASH"
-    echo "  codex: $HASH"
 
-    HASH=$(prefetch "${BASE_URL}/codex-code-mode-host-${platform}.tar.gz")
-    if [ -z "$HASH" ]; then
-        echo "Error: Could not fetch codex-code-mode-host hash for platform $platform"
-        exit 1
-    fi
-    CODE_MODE_HOST_HASHES[$platform]="$HASH"
-    echo "  codex-code-mode-host: $HASH"
+    PLATFORM_HASHES[$platform]="$HASH"
+    echo "  $platform: $HASH"
 done
 
 echo "Updating $PACKAGE_FILE..."
@@ -96,10 +81,8 @@ sed -i.bak "s/version = \".*\"/version = \"$VERSION\"/" "$PACKAGE_FILE"
 
 # Update platform-specific hashes
 for platform in "${PLATFORMS[@]}"; do
-    sed -i.bak \
-        -e "/\"$platform\" = {/ s|codex = \"[^\"]*\"|codex = \"${CODEX_HASHES[$platform]}\"|" \
-        -e "/\"$platform\" = {/ s|codeModeHost = \"[^\"]*\"|codeModeHost = \"${CODE_MODE_HOST_HASHES[$platform]}\"|" \
-        "$PACKAGE_FILE"
+    HASH="${PLATFORM_HASHES[$platform]}"
+    sed -i.bak "s|\"$platform\" = \"[^\"]*\"|\"$platform\" = \"$HASH\"|" "$PACKAGE_FILE"
 done
 
 rm -f "${PACKAGE_FILE}.bak"
