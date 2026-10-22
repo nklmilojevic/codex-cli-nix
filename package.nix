@@ -2,6 +2,7 @@
 , stdenv
 , fetchurl
 , makeWrapper
+, installShellFiles
 , diffutils
 }:
 
@@ -39,7 +40,7 @@ stdenv.mkDerivation {
 
   sourceRoot = ".";
 
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper installShellFiles ];
 
   dontBuild = true;
   # Static musl binary on Linux, signed binary on Darwin — leave untouched
@@ -65,6 +66,14 @@ stdenv.mkDerivation {
           "'"$out"'/libexec/codex/bin/codex" app-server daemon update --from-cli --yes >/dev/null 2>&1 || true
         fi
       '
+  ''
+  # The unwrapped binary: the wrapper's daemon check has no business in a build.
+  + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    export HOME=$TMPDIR
+    installShellCompletion --cmd codex \
+      --bash <($out/libexec/codex/bin/codex completion bash) \
+      --fish <($out/libexec/codex/bin/codex completion fish) \
+      --zsh <($out/libexec/codex/bin/codex completion zsh)
   '';
 
   meta = with lib; {
